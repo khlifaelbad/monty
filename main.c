@@ -1,20 +1,25 @@
 #include "monty.h"
+#include <stdio.h>
+#define _GNU_SOURCE
+#include <stdlib.h>
 
-monty_data_t data = {NULL, 0, 0};
+bus_t bus = {NULL, NULL, NULL, 0};
 
 /**
- * main - Monty interpreter
- * @argc: arguments counter
- * @argv: aarguments passed to the program
- * Return: Alwqys 0.
- */
-int main(int argc, char **argv)
+* main - function for monty code interpreter
+* @argc: argument count
+* @argv: argument value
+*
+* Return: 0 on success
+*/
+int main(int argc, char *argv[])
 {
+	char *content;
 	FILE *file;
+	size_t size = 0;
+	ssize_t read_line = 1;
 	stack_t *stack = NULL;
-	char *buffer = NULL, *instruction = NULL;
-	size_t buf_size = 0;
-	unsigned int line_number = 1;
+	unsigned int counter = 0;
 
 	if (argc != 2)
 	{
@@ -22,33 +27,27 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 	file = fopen(argv[1], "r");
-	if (file == NULL)
+	bus.file = file;
+	if (!file)
 	{
 		fprintf(stderr, "Error: Can't open file %s\n", argv[1]);
 		exit(EXIT_FAILURE);
 	}
-	data.input_value = NULL;
-	while (getline(&buffer, &buf_size, file) != -1)
+	while (read_line > 0)
 	{
-		if (*buffer == '\n')
+		content = NULL;
+		read_line = getline(&content, &size, file);
+		bus.content = content;
+		counter++;
+		if (read_line > 0)
 		{
-			line_number++;
-			continue;
+			execute(content, &stack, counter, file);
 		}
-		instruction = strtok(buffer, " \t\n");
-		if (instruction == NULL || instruction[0] == '#')
-		{
-			line_number++;
-			continue;
-		}
-		data.input_value = strtok(NULL, " \t\n");
-		get_opcode_func(instruction)(&stack, line_number);
-		line_number++;
+		free(content);
 	}
-	free(buffer);
-	free_stack(&stack);
+	free_stack(stack);
 	fclose(file);
-	exit(data.status);
+return (0);
 }
 
 
