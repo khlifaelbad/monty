@@ -1,11 +1,12 @@
-#ifndef MONTY_H
-#define MONTY_H
-#define _GNU_SOURCE
-#include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/types.h>
+#ifndef MAIN_H
+#define MAIN_H
+
 #include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <string.h>
+#include <ctype.h>
+
 /**
  * struct stack_s - doubly linked list representation of a stack (or queue)
  * @n: integer
@@ -17,10 +18,11 @@
  */
 typedef struct stack_s
 {
-        int n;
-        struct stack_s *prev;
-        struct stack_s *next;
+	int n;
+	struct stack_s *prev;
+	struct stack_s *next;
 } stack_t;
+
 /**
  * struct instruction_s - opcode and its function
  * @opcode: the opcode
@@ -31,33 +33,60 @@ typedef struct stack_s
  */
 typedef struct instruction_s
 {
-        char *opcode;
-        void (*f)(stack_t **stack, unsigned int line_number);
+	char *opcode;
+	void (*f)(stack_t **stack, unsigned int line_number);
 } instruction_t;
-typedef struct monty_data
-{	char * input_value;
-	int is_stack;
-	int status;
-} monty_data_t;
-extern monty_data_t data;
 
-/*opcode functions*/
-void push(stack_t **stack, unsigned int line_count);
-void pall(stack_t **stack, unsigned int line_count);
-void nop(stack_t **stack, unsigned int line_number);
-void pint(stack_t **stack, unsigned int line_number);
-void pop(stack_t **stack, unsigned int line_number);
-void swap(stack_t **stack, unsigned int line_number);
+/**
+ * struct data - all data in program
+ * @push_value: value to push
+ * @line_num: line number of opcode
+ * @opcode: the opcode
+ * @mfile: file to open
+ * @top: the top of stack
+ * @mode: 0 mean stack, 1 mean queue
+ * in stack you push in the start
+ * in the queue you push at end
+ */
+typedef struct data
+{
+	int push_value;
+	unsigned int line_num;
+	char *opcode;
+	FILE *mfile;
+	stack_t *top;
+	int mode;
+} data;
+data datax;
 
-/* linked list functions*/
-size_t print_stack(const stack_t *stack);
-stack_t *add_node_to_end(stack_t **stack, const int n);
-stack_t *add_node_to_top(stack_t **stack, const int n);
-void free_stack(stack_t **stack);
+/*main.c*/
+void exec(void);
+int main(int argc, char **argv);
 
-/* opcode function selecter*/
-void (*get_opcode_func(char *instruction))(stack_t **, unsigned int);
+/*opcodes.c*/
+void _push(stack_t **top, unsigned int line_number);
+void _pall(stack_t **top, unsigned int line_number);
+void _pint(stack_t **top, unsigned int line_number);
+void _pop(stack_t **top, unsigned int line_number);
+void _swap(stack_t **top, unsigned int line_number);
+void _add(stack_t **top, unsigned int line_number);
+void _nop(stack_t **top, unsigned int line_number);
+void _sub(stack_t **top, unsigned int line_number);
+void _div(stack_t **top, unsigned int line_number);
+void _mul(stack_t **top, unsigned int line_number);
+void _mod(stack_t **top, unsigned int line_number);
+void _pchar(stack_t **top, unsigned int line_number);
+void _pstr(stack_t **top, unsigned int line_number);
+void _rotl(stack_t **top, unsigned int line_number);
+void _rotr(stack_t **top, unsigned int line_number);
+void _mode(stack_t **top, unsigned int line_number);
+
+/*helpers.c*/
+FILE *openfile(char *filename);
+size_t num_len(int num);
+void verify_number(char *token);
+void free_stack(stack_t *top);
+
 #endif
-
 
 
