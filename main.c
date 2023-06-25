@@ -1,113 +1,54 @@
 #include "monty.h"
 
-/**
- * exec - exec opcode
- * Return: none
- */
-void exec(void)
-{
-	instruction_t ins[] = {
-		{"push", f_push},
-		{"pall", f_pall},
-		{"pint", f_pint},
-		{"pop", f_pop},
-		{"swap", f_swap},
-		{"add", f_add},
-		{"nop", f_nop},
-		{"sub", f_sub},
-		{"div", f_div},
-		{"mul", f_mul},
-		{"mod", f_mod},
-		{"pchar", f_pchar},
-		{"pstr", f_pstr},
-		{"rotl", f_rotl},
-		{"rotr", f_rotr},
-		{"queue", f_mod},
-		{"stack", f_mod},
-		{NULL, NULL},
-	};
-	int j = 0;
-
-	for (j = 0; ins[j].opcode; j++)
-	{
-		if (strcmp(datax.opcode, ins[j].opcode) == 0)
-		{
-			ins[j].f(&datax.top, datax.line_num);
-			break;
-		}
-	}
-	if (!ins[j].opcode)
-	{
-		fprintf(stderr, "L%d: unknown instruction %s\n",
-				datax.line_num, datax.opcode);
-		free_stack(datax.top);
-		exit(EXIT_FAILURE);
-	}
-}
-/**
- * remove_spaces - remove spaces
- * @str: string
- * Return: new string
- */
-char *remove_spaces(char *str)
-{
-	while (*str)
-	{
-		if (*str == ' ')
-			str++;
-		else
-			break;
-	}
-	return (str);
-}
+monty_data_t data = {NULL, 0, 0};
 
 /**
- * main -  count how many charachter in number
- * @argc: number
- * @argv: number
- * Return: the number lentgh
+ * main - Monty interpreter
+ * @argc: arguments counter
+ * @argv: aarguments passed to the program
+ * Return: Alwqys 0.
  */
 int main(int argc, char **argv)
 {
-	char line[100], *token;
-	int i = 0;
+	FILE *file;
+	stack_t *stack = NULL;
+	char *buffer = NULL, *instruction = NULL;
+	size_t buf_size = 0;
+	unsigned int line_number = 1;
 
-	datax.mode = 0;
 	if (argc != 2)
 	{
 		fprintf(stderr, "USAGE: monty file\n");
 		exit(EXIT_FAILURE);
 	}
-	datax.mfile = openfile(argv[1]);
-	while (fgets(line, sizeof(line), datax.mfile) != NULL)
+	file = fopen(argv[1], "r");
+	if (file == NULL)
 	{
-		if (strlen(remove_spaces(line)) < 3 || remove_spaces(line)[0] == '#')
+		fprintf(stderr, "Error: Can't open file %s\n", argv[1]);
+		exit(EXIT_FAILURE);
+	}
+	data.input_value = NULL;
+	while (getline(&buffer, &buf_size, file) != -1)
+	{
+		if (*buffer == '\n')
 		{
-			datax.line_num++;
+			line_number++;
 			continue;
 		}
-		datax.line_num++;
-		token = strtok(line, " \n");
-		for (i = 0; token != NULL && i < 2; i++)
+		instruction = strtok(buffer, " \t\n");
+		if (instruction == NULL || instruction[0] == '#')
 		{
-			if (i == 0) /*first part command first loop*/
-				datax.opcode = token;
-			if (strcmp(datax.opcode, "push") != 0) /*if opcode is not push break*/
-				break;
-			if (i == 1)
-				verify_number(token);
-			token = strtok(NULL, " \n");
+			line_number++;
+			continue;
 		}
-		if (strcmp(datax.opcode, "push") == 0 && i == 1)
-		{
-			fprintf(stderr, "L%d: usage: push integer\n", datax.line_num);
-			free_stack(datax.top);
-			exit(EXIT_FAILURE);
-		}
-		exec();
+		data.input_value = strtok(NULL, " \t\n");
+		get_opcode_func(instruction)(&stack, line_number);
+		line_number++;
 	}
-	free_stack(datax.top);
-	exit(EXIT_SUCCESS);
+	free(buffer);
+	free_stack(&stack);
+	fclose(file);
+	exit(data.status);
 }
 
 
