@@ -24,6 +24,3 @@ rotr
 stack
 queue
 
-
-
-
